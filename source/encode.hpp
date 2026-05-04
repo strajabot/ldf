@@ -1,0 +1,4 @@
+#ifndef LIB_DEFFER_FORMAT_ENCODE
+#define LIB_DEFFER_FORMAT_ENCODE
+
+#endif

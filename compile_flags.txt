@@ -1,0 +1,4 @@
+-fno-pie
+-no-pie
+-Ildf
+-std=c++20
