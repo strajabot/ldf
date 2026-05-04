@@ -5,29 +5,43 @@
 #include "../source/arch.hpp"
 #include "../source/metadata.hpp"
 
-TEST_CASE("from_uint produces correct decimal strings", "[metadata][sstring]") {
-    REQUIRE(strcmp(ldf::sstring::from_uint<0>().data(),                     "0")                    == 0);
-    REQUIRE(strcmp(ldf::sstring::from_uint<1>().data(),                     "1")                    == 0);
-    REQUIRE(strcmp(ldf::sstring::from_uint<42>().data(),                    "42")                   == 0);
-    REQUIRE(strcmp(ldf::sstring::from_uint<100>().data(),                   "100")                  == 0);
-    REQUIRE(strcmp(ldf::sstring::from_uint<999>().data(),                   "999")                  == 0);
-    REQUIRE(strcmp(ldf::sstring::from_uint<1000>().data(),                  "1000")                 == 0);
-    REQUIRE(strcmp(ldf::sstring::from_uint<18446744073709551615ULL>().data(),"18446744073709551615") == 0);
+TEST_CASE("from_integral produces correct decimal strings", "[metadata][sstring]") {
+    REQUIRE(strcmp(ldf::sstring::from_integral<0>().data(),                     "0")                    == 0);
+    REQUIRE(strcmp(ldf::sstring::from_integral<1>().data(),                     "1")                    == 0);
+    REQUIRE(strcmp(ldf::sstring::from_integral<42>().data(),                    "42")                   == 0);
+    REQUIRE(strcmp(ldf::sstring::from_integral<100>().data(),                   "100")                  == 0);
+    REQUIRE(strcmp(ldf::sstring::from_integral<999>().data(),                   "999")                  == 0);
+    REQUIRE(strcmp(ldf::sstring::from_integral<1000>().data(),                  "1000")                 == 0);
+    REQUIRE(strcmp(ldf::sstring::from_integral<18446744073709551615ULL>().data(),"18446744073709551615") == 0);
 }
 
-TEST_CASE("from_uint is constexpr", "[metadata][sstring]") {
-    static_assert(ldf::sstring::from_uint<0>().data()[0]  == '0');
-    static_assert(ldf::sstring::from_uint<42>().data()[0] == '4');
-    static_assert(ldf::sstring::from_uint<42>().data()[1] == '2');
+TEST_CASE("from_integral is constexpr", "[metadata][sstring]") {
+    static_assert(ldf::sstring::from_integral<0>().data()[0]  == '0');
+    static_assert(ldf::sstring::from_integral<42>().data()[0] == '4');
+    static_assert(ldf::sstring::from_integral<42>().data()[1] == '2');
 }
 
 TEST_CASE("IntegralField compile emits correct assembly directive", "[metadata]") {
     static constexpr ldf::sstring::container section("s");
+
+    // unsigned
     REQUIRE(strcmp(ldf::IntegralField<uint64_t{0}>::compile<section>().data(),   ".quad 0\n\t")   == 0);
     REQUIRE(strcmp(ldf::IntegralField<uint64_t{42}>::compile<section>().data(),  ".quad 42\n\t")  == 0);
     REQUIRE(strcmp(ldf::IntegralField<uint32_t{7}>::compile<section>().data(),   ".long 7\n\t")   == 0);
     REQUIRE(strcmp(ldf::IntegralField<uint16_t{3}>::compile<section>().data(),   ".short 3\n\t")  == 0);
     REQUIRE(strcmp(ldf::IntegralField<uint8_t{255}>::compile<section>().data(),  ".byte 255\n\t") == 0);
+
+    // signed positive
+    REQUIRE(strcmp(ldf::IntegralField<int64_t{100}>::compile<section>().data(),  ".quad 100\n\t") == 0);
+    REQUIRE(strcmp(ldf::IntegralField<int32_t{7}>::compile<section>().data(),    ".long 7\n\t")   == 0);
+    REQUIRE(strcmp(ldf::IntegralField<int16_t{3}>::compile<section>().data(),    ".short 3\n\t")  == 0);
+    REQUIRE(strcmp(ldf::IntegralField<int8_t{127}>::compile<section>().data(),   ".byte 127\n\t") == 0);
+
+    // signed negative
+    REQUIRE(strcmp(ldf::IntegralField<int64_t{-1}>::compile<section>().data(),   ".quad -1\n\t")   == 0);
+    REQUIRE(strcmp(ldf::IntegralField<int32_t{-1}>::compile<section>().data(),   ".long -1\n\t")   == 0);
+    REQUIRE(strcmp(ldf::IntegralField<int16_t{-1}>::compile<section>().data(),   ".short -1\n\t")  == 0);
+    REQUIRE(strcmp(ldf::IntegralField<int8_t{-128}>::compile<section>().data(),  ".byte -128\n\t") == 0);
 }
 
 TEST_CASE("IntegralField compile is constexpr", "[metadata]") {

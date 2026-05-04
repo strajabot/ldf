@@ -1,38 +1,53 @@
 #ifndef LDF_HELPERS
 #define LDF_HELPERS
 
-#include "sstring.hpp"
-#include <cstdint>
+#include <cstddef>
+#include <type_traits>
 
-namespace ldf::sstring {
+namespace ldf::helper {
 
-namespace detail {
-    constexpr size_t count_digits_u64(uint64_t n) {
-        if (n == 0) return 1;
-        size_t d = 0;
-        while (n > 0) { n /= 10; ++d; }
-        return d;
+template <typename T, typename = std::enable_if_t<std::is_integral_v<T>>>
+constexpr size_t get_magnitude(const T number) {
+    if constexpr (std::is_unsigned_v<T>) {
+        return static_cast<size_t>(number);
     }
-} // namespace detail
 
-// V is a NTTP so the return type container<digits+1> is known at compile time.
-template<uint64_t V>
-constexpr auto from_uint() {
-    constexpr size_t digits = detail::count_digits_u64(V);
-    container<digits + 1> result{};
-    if constexpr (V == 0) {
-        result.value[0] = '0';
-    } else {
-        uint64_t n = V;
-        size_t pos = digits;
-        while (n > 0) {
-            result.value[--pos] = static_cast<char>('0' + n % 10);
-            n /= 10;
-        }
+    if (number >= 0) {
+        return static_cast<size_t>(number);
     }
-    return result;
+
+    // signed type, so expression can't overflow.
+    return static_cast<size_t>(-(number + 1) + 1);
 }
 
-} // namespace ldf::sstring
+template <typename T, typename = std::enable_if_t<std::is_integral_v<T>>>
+constexpr bool is_negative(const T number) {
+    if constexpr (std::is_unsigned_v<T>) {
+        return false;
+    }
+
+    if (number >= 0) {
+        return false;
+    }
+
+    return true;
+}
+
+constexpr size_t count_digits(size_t magnitude, size_t radix = 10)
+{
+    if (magnitude == 0)
+        return 1;
+
+    size_t digits = 0;
+    while (magnitude > 0)
+    {
+        magnitude /= radix;
+        ++digits;
+    }
+    return digits;
+
+}
+
+} // namespace ldf::helper
 
 #endif

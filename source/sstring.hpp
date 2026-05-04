@@ -1,7 +1,10 @@
 #ifndef LDF_SSTRING
 #define LDF_SSTRING
 
+#include "helpers.hpp"
+
 #include <cstddef>
+#include <type_traits>
 
 
 namespace ldf::sstring {
@@ -19,7 +22,6 @@ struct container {
     constexpr const char* data() const { return value; }
     constexpr size_t size() const { return N - 1; }  // excludes null terminator
 };
-
 
 template<size_t N>
 constexpr auto concat(const char (&first)[N])
@@ -69,6 +71,31 @@ constexpr auto concat(const A& first, const B& second, const Rest&... rest)
     return concat(concat(first, second), rest...);
 }
 
+template <size_t Magnitude>
+constexpr auto from_magnitude() {
+    // fixme: support radix != 10
+    constexpr size_t digits = ldf::helper::count_digits(Magnitude);
+    container<digits + 1> result{};
+    size_t mag = Magnitude;
+    for (size_t i = digits; i > 0; --i) {
+        result.value[i - 1] = static_cast<char>('0' + mag % 10);
+        mag /= 10;
+    }
+    return result;
+}
+
+template <auto Integral, typename = std::enable_if_t<std::is_integral_v<decltype(Integral)>>>
+constexpr auto from_integral() {
+    constexpr bool negative    = ldf::helper::is_negative(Integral);
+    constexpr size_t magnitude = ldf::helper::get_magnitude(Integral);
+
+    constexpr auto digits = from_magnitude<magnitude>();
+
+    if constexpr (negative)
+        return concat("-", digits);
+    else
+        return digits;
+}
 
 } // ldf::sstring
 

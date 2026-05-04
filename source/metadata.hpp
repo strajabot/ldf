@@ -12,26 +12,26 @@ namespace ldf
 {
 
 // IntegralField<auto V>
-// Holds a compile-time value and emits the correct assembly directive.
-// Supported types: uint8_t, uint16_t, uint32_t, uint64_t (and unsigned equivalents).
+// Holds a compile-time integral value and emits the correct assembly directive.
+// Supported types: all types satisfying std::is_integral_v (signed and unsigned).
 template<auto V>
 struct IntegralField {
     template<const auto& /*Section*/>
     static constexpr auto compile() {
         using T = decltype(V);
-        constexpr uint64_t uval = static_cast<uint64_t>(V);
+        static_assert(std::is_integral_v<T>,
+            "IntegralField: unsupported type; use integral types");
 
-        if constexpr (std::is_unsigned_v<T> && sizeof(T) == 8) {
-            return ldf::sstring::concat(".quad ", ldf::sstring::from_uint<uval>(), "\n\t");
-        } else if constexpr (std::is_unsigned_v<T> && sizeof(T) == 4) {
-            return ldf::sstring::concat(".long ", ldf::sstring::from_uint<uval>(), "\n\t");
-        } else if constexpr (std::is_unsigned_v<T> && sizeof(T) == 2) {
-            return ldf::sstring::concat(".short ", ldf::sstring::from_uint<uval>(), "\n\t");
-        } else if constexpr (std::is_unsigned_v<T> && sizeof(T) == 1) {
-            return ldf::sstring::concat(".byte ", ldf::sstring::from_uint<uval>(), "\n\t");
+        constexpr auto value_str = ldf::sstring::from_integral<V>();
+
+        if constexpr (sizeof(T) == 8) {
+            return ldf::sstring::concat(".quad ", value_str, "\n\t");
+        } else if constexpr (sizeof(T) == 4) {
+            return ldf::sstring::concat(".long ", value_str, "\n\t");
+        } else if constexpr (sizeof(T) == 2) {
+            return ldf::sstring::concat(".short ", value_str, "\n\t");
         } else {
-            static_assert(sizeof(T) == 0,
-                "IntegralField: unsupported type; use uint8/16/32/64_t");
+            return ldf::sstring::concat(".byte ", value_str, "\n\t");
         }
     }
 };
