@@ -88,12 +88,12 @@ TEST_CASE("MetadataBuilder compile produces correct full assembly string", "[met
 
     const char* expected =
         ".pushsection my.section, \"\", @progbits\n\t"
-        "0: .quad 1f\n\t"
-        ".popsection\n\t"
         ".pushsection my.section.structs, \"\", @progbits\n\t"
         "1:\n\t"
         ".quad 3\n\t"
         ".long 7\n\t"
+        ".popsection\n\t"
+        "0: .quad 1b\n\t"
         ".popsection\n\t"
         LOAD_ADDRESS("%0", "0b") "\n\t";
 
@@ -114,10 +114,10 @@ TEST_CASE("MetadataBuilder with no fields compiles correctly", "[metadata]") {
 
     const char* expected =
         ".pushsection empty, \"\", @progbits\n\t"
-        "0: .quad 1f\n\t"
-        ".popsection\n\t"
         ".pushsection empty.structs, \"\", @progbits\n\t"
         "1:\n\t"
+        ".popsection\n\t"
+        "0: .quad 1b\n\t"
         ".popsection\n\t"
         LOAD_ADDRESS("%0", "0b") "\n\t";
 
@@ -137,14 +137,14 @@ TEST_CASE("MetadataBuilder with string field compiles correctly", "[metadata]") 
 
     const char* expected =
         ".pushsection my.section, \"\", @progbits\n\t"
-        "0: .quad 1f\n\t"
-        ".popsection\n\t"
         ".pushsection my.section.structs, \"\", @progbits\n\t"
         "1:\n\t"
         ".pushsection my.section.strings, \"\", @progbits\n\t"
         "2: .asciz \"hello\"\n\t"
         ".popsection\n\t"
         ".quad 2b\n\t"
+        ".popsection\n\t"
+        "0: .quad 1b\n\t"
         ".popsection\n\t"
         LOAD_ADDRESS("%0", "0b") "\n\t";
 
@@ -165,8 +165,6 @@ TEST_CASE("MetadataBuilder with mixed numeric and string fields", "[metadata]") 
 
     const char* expected =
         ".pushsection data, \"\", @progbits\n\t"
-        "0: .quad 1f\n\t"
-        ".popsection\n\t"
         ".pushsection data.structs, \"\", @progbits\n\t"
         "1:\n\t"
         ".long 5\n\t"
@@ -174,6 +172,8 @@ TEST_CASE("MetadataBuilder with mixed numeric and string fields", "[metadata]") 
         "2: .asciz \"world\"\n\t"
         ".popsection\n\t"
         ".quad 2b\n\t"
+        ".popsection\n\t"
+        "0: .quad 1b\n\t"
         ".popsection\n\t"
         LOAD_ADDRESS("%0", "0b") "\n\t";
 

@@ -99,9 +99,9 @@ public:
     static constexpr auto compile() {
         return ldf::sstring::concat(
             ".pushsection ", Section, ", \"\", @progbits\n\t",
-            "0: .quad 1f\n\t",
-            ".popsection\n\t",
             compile_struct(),
+            "0: .quad 1b\n\t",
+            ".popsection\n\t",
             LOAD_ADDRESS("%0", "0b"), "\n\t"
         );
     }

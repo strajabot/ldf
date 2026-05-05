@@ -23,7 +23,7 @@
 #if LDF_ARCH_AMD64
 
 #define LOAD_ADDRESS(reg, sym) \
-        "lea " sym "(%%rip), %%" reg
+        "lea " sym "(%%rip), " reg
 
 
 #elif LDF_ARCH_RISCV
