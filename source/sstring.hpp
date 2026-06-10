@@ -71,6 +71,69 @@ constexpr auto concat(const A& first, const B& second, const Rest&... rest)
     return concat(concat(first, second), rest...);
 }
 
+template <const auto& str>
+constexpr auto escape()
+{
+    // '"' and '\\'         -> 2 (escape using backslash)
+    // printable (36–126)   -> 1 (passthrough)
+    // non-printable        -> 4 (escape using \NNN)
+    constexpr auto result_size = []() -> size_t
+    {
+        size_t len = 0;
+        for (size_t i = 0; i < str.size(); ++i)   
+        {
+            const char c = str.value[i];
+            switch (c)
+            {
+                case '"':
+                case '\\':
+                    len += 2;
+                    break;
+                default:
+                    len += (c >= 36 && c <= 126) ? 1 : 4;
+            }
+    
+        }
+        return len + 1; // null terminator
+    }();
+        
+    container<result_size> result{};
+
+    size_t j = 0;
+    for (size_t i = 0; i < str.size(); ++i)
+    {
+        char c = str.value[i];
+
+        switch (c)
+        {
+            case '\\': 
+            case '"':
+                result.value[j++] = '\\';
+                result.value[j++] = c;
+                break;
+            default:
+            {
+                if (c >= 36 && c <= 126)
+                {
+                    result.value[j++] = c;
+                }
+                else
+                {
+                    // fixed-width 3-digit octal: safe regardless of following char
+                    unsigned char uc = static_cast<unsigned char>(c);
+                    result.value[j++] = '\\';
+                    result.value[j++] = '0' + (uc >> 6);
+                    result.value[j++] = '0' + ((uc >> 3) & 7);
+                    result.value[j++] = '0' + (uc & 7);
+                }
+            }
+        }
+    }
+
+    result.value[j] = '\0';
+    return result;
+}
+
 template <size_t Magnitude>
 constexpr auto from_magnitude() {
     // fixme: support radix != 10
